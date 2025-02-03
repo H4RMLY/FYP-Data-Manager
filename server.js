@@ -8,19 +8,23 @@ const app = express();
 const webRoot = './';
 app.use(express.static(webRoot));
 app.listen(8080);
-
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    next();
-});
-
 // Server Functions
+
+var corsMiddleware = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*'); //replace localhost with actual host
+    res.header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT, PATCH, POST, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, Authorization');
+
+    next();
+}
+
+app.use(corsMiddleware);
 
 function connectSQL(){
     const con = mysql.createConnection({
         host: "localhost",
-        user: "harmly",
-        password: "AMv720tPS@",
+        user: "root",
+        password: "8592",
         database: "pdv"
       });
     con.connect(function(err) {
@@ -32,12 +36,13 @@ function connectSQL(){
 
 function countVendors(req, res){
     const con = connectSQL();
-    con.query("SELECT COUNT(*) as count FROM testvendors;", (err, result) => 
+    con.query("SELECT COUNT(*) as count FROM vendor_info;", (err, result) =>
         {
             if (err) throw err;
             res.json(result[0].count);
+            console.log(result[0].count);
         })
-    con.end();
+        con.end();
 }
 
 function addVendor(req, res) {
@@ -45,10 +50,11 @@ function addVendor(req, res) {
     const vendorID = req.body.id;
     const name = req.body.name;
 
-    con.query("INSERT INTO testvendors VALUES (?,?)", [vendorID, name], (err, result) => 
+    con.query("INSERT INTO vendor_info VALUES (?,?)", [vendorID, name], (err, result) =>
         {
             if (err) throw err;
             res.json("Vendor Added");
+            console.log(vendorID, name);
         })
     con.end();
 }
@@ -57,10 +63,11 @@ function removeVendor(req, res) {
     const con = connectSQL();
     const name = req.body.name;
 
-    con.query("DELETE FROM testvendors WHERE vendor_name = ?", [name], (err, result) => 
+    con.query("DELETE FROM vendor_info WHERE vendor_name = ?", [name], (err, result) =>
         {
             if (err) throw err;
             res.json("Vendor deleted");
+            console.log(name);
         })
     con.end();
 };
