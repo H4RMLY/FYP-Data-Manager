@@ -1,11 +1,16 @@
 window.addEventListener('load', main);
 
 function main() {
-    displayVendors();
+    vendorCount();
     buttonEvents();
+    start = performance.now();
+    vendorList();
+    end = performance.now();
+    timeTaken = end - start;
+    console.log("Function took " + timeTaken + " milliseconds");
 }
 
-async function displayVendors() {
+async function vendorCount() {
     const response = await fetch("/countVendors");
     if (response.ok){
         let vendorCount = await response.json();
@@ -23,8 +28,26 @@ async function addVendor() {
     });
     if (response.ok) {
         console.log('Vendor added successfully');
-        displayVendors();
-    }}
+        vendorCount();
+    }
+}
+
+async function vendorList(){
+    const response = await fetch('/vendorList');
+    if (response.ok){
+        let vendorList = await response.json();
+        for (const vendor of vendorList){
+            const template = document.querySelector('#vendorInfo-template');
+            const listItem = template.content.cloneNode(true);
+
+            const name = listItem.querySelector('.vendorInfo');
+            name.textContent = vendor.vendor_name;
+
+            const vendorList = document.querySelector('#vendorList');
+            vendorList.append(listItem);
+        }
+    }   
+}
 
 async function removeVendor(){
     const payload = { name : 'testVendor1234'}
@@ -35,7 +58,7 @@ async function removeVendor(){
     });
     if (response.ok) {
         console.log('Vendor removed successfully');
-        displayVendors();
+        vendorCount();
     }
 }
 

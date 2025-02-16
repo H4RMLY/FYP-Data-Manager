@@ -8,6 +8,7 @@ const app = express();
 const webRoot = './';
 app.use(express.static(webRoot));
 app.listen(8080);
+
 // Server Functions
 
 var corsMiddleware = function(req, res, next) {
@@ -40,7 +41,6 @@ function countVendors(req, res){
         {
             if (err) throw err;
             res.json(result[0].count);
-            console.log(result[0].count);
         })
         con.end();
 }
@@ -54,7 +54,6 @@ function addVendor(req, res) {
         {
             if (err) throw err;
             res.json("Vendor Added");
-            console.log(vendorID, name);
         })
     con.end();
 }
@@ -67,11 +66,21 @@ function removeVendor(req, res) {
         {
             if (err) throw err;
             res.json("Vendor deleted");
-            console.log(name);
         })
     con.end();
 };
 
+function getVendorList(req, res) {
+    const con = connectSQL();
+    con.query("SELECT * FROM vendor_info", (err, result) =>
+        {
+            if (err) throw err;
+            res.json(result);
+        })
+    con.end();
+}
+
 app.get('/countVendors', countVendors);
+app.get('/vendorList', getVendorList);
 app.post('/addVendor', express.json(), addVendor);
 app.post('/removeVendor', express.json(), removeVendor);
