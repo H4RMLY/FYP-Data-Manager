@@ -50,7 +50,7 @@ async function vendorList(){
 }
 
 async function removeVendor(){
-    const payload = { name : 'testVendor1234'}
+    const payload = { name : 'testVendor134565'}
     const response = await fetch('/removeVendor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
