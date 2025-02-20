@@ -1,3 +1,7 @@
+//CREATE TABLE COMMANDS
+//CREATE TABLE user_data (id INT UNIQUE NOT NULL, type VARCHAR(32) NOT NULL, data VARCHAR(255));
+//CREATE TABLE vendor_info (vendor_id INT NOT NULL, vendor_name VARCHAR(64), linked_data VARCHAR(255));
+
 import express from 'express';
 import { promises as fs } from 'fs';
 
