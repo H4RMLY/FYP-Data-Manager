@@ -129,15 +129,11 @@ function updateLinkedData(vendorName, newData){
         con.query("SELECT linked_data FROM vendor_info WHERE vendor_name = ?;", [vendorName], (err, result) => {
             if (err) throw err;
             console.log(result);
-            // if (!result){
-            //     if (result[0].linked_data != "NULL"){
-            //         writeLinkedData(vendorName, `${result[0].linked_data},${newData}`);
-            //     } else {
-            //         writeLinkedData(vendorName, `${newData}`);
-            //     }
-            // } else {
-            //     readLinkedData(vendorName, newData);
-            // }
+                if (result[0].linked_data != "NULL"){
+                    writeLinkedData(vendorName, `${result[0].linked_data},${newData}`);
+                } else {
+                    writeLinkedData(vendorName, `${newData}`);
+                }
         });
         con.end();
     }
