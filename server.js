@@ -97,9 +97,20 @@ function recvInfo(req, res){
     const type = req.body.datatype;
     const data = req.body.data;
     
-    addVendor(vendorId, vendorName);
-    let dataID = addData(type, data);
-    updateLinkedData(vendorName, dataID);
+    const con = connectSQL();
+    con.query('SELECT vendor_name FROM vendor_info WHERE vendor_name = ?', [vendorName], (err, result) => {
+        if(result.length > 0){
+            res.json("Data updated");
+            let dataID = addData(type, data);
+            updateLinkedData(vendorName, dataID);
+        } else {
+            addVendor(vendorId, vendorName);
+            let dataID = addData(type, data);
+            updateLinkedData(vendorName, dataID);
+            res.json("Data received and stored");
+        }
+    });
+    con.end();
 }
 
 function generateID(){
@@ -128,7 +139,8 @@ function updateLinkedData(vendorName, dataID){
     con.query('SELECT linked_data FROM vendor_info WHERE vendor_name =?;', [vendorName], (err, result) => {
         if (err) throw err;
         if(result.length > 0){
-            console.log(result[0].linked_data);
+            let newData = `${result[0].linked_data},${dataID}`
+            writeLinkedData(vendorName, newData);
         } else {
             writeLinkedData(vendorName, dataID);
         }
