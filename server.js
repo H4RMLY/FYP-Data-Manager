@@ -123,21 +123,17 @@ function writeLinkedData(vendorName, data){
     con.end();
 }
 
-function updateLinkedData(vendorName, newData){
-    const readLinkedData = (vendorName, newData) => {
-        const con = connectSQL();
-        con.query("SELECT linked_data FROM vendor_info WHERE vendor_name = ?;", [vendorName], (err, result) => {
-            if (err) throw err;
-            console.log(result);
-                if (result[0].linked_data != "NULL"){
-                    writeLinkedData(vendorName, `${result[0].linked_data},${newData}`);
-                } else {
-                    writeLinkedData(vendorName, `${newData}`);
-                }
-        });
-        con.end();
-    }
-    readLinkedData(vendorName, newData);
+function updateLinkedData(vendorName, dataID){
+    const con = connectSQL();
+    con.query('SELECT linked_data FROM vendor_info WHERE vendor_name =?;', [vendorName], (err, result) => {
+        if (err) throw err;
+        if(result.length > 0){
+            console.log(result[0].linked_data);
+        } else {
+            writeLinkedData(vendorName, dataID);
+        }
+    });
+    con.end();
 }
 
 app.get('/countVendors', countVendors);

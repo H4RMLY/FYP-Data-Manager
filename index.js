@@ -40,8 +40,11 @@ async function vendorList(){
             const template = document.querySelector('#vendorInfo-template');
             const listItem = template.content.cloneNode(true);
 
-            const name = listItem.querySelector('.vendorInfo');
+            const name = listItem.querySelector('.vendorName');
             name.textContent = vendor.vendor_name;
+
+            const linkedData = listItem.querySelector('.linkedData');
+            linkedData.textContent = vendor.linked_data;
 
             const vendorList = document.querySelector('#vendorList');
             vendorList.append(listItem);
