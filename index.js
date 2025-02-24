@@ -1,15 +1,15 @@
 window.addEventListener('load', main);
 
-function main() {
+
+async function main() {
     vendorCount();
-    buttonEvents();
-    start = performance.now();
+    pendingDataCount()
     vendorList();
-    end = performance.now();
-    timeTaken = end - start;
-    console.log("Function took " + timeTaken + " milliseconds");
+    listPendingData();
+    buttonEvents();
 }
 
+// Fetches the number of vendors in the database and displays it on the page.
 async function vendorCount() {
     const response = await fetch("/countVendors");
     if (response.ok){
@@ -19,19 +19,59 @@ async function vendorCount() {
     }
 }
 
-async function addVendor() {
-    const payload = { id : 1234, name : 'testVendor1234'}
-    const response = await fetch('/addVendor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-    });
-    if (response.ok) {
-        console.log('Vendor added successfully');
-        vendorCount();
+// Fetches the amount of data that needs to be varified and displays it next to the varify button.
+async function pendingDataCount() {
+    const response = await fetch("/verifyDataCount");
+    if (response.ok){   
+        let verifyDataCount = await response.json();
+        let vCount = document.querySelector('#verifyCount');
+        vCount.textContent = verifyDataCount;
     }
 }
 
+// Show pending data for varification.
+function showPendingData() {
+    const tab = document.querySelector('#pendingDataTab');
+    tab.classList.toggle('hidden');
+}
+
+// Referesh the pending data list.
+function refreshPendingList(){
+    const list = document.querySelector('#pendingList');
+    list.innerHTML = '';
+    listPendingData();
+}
+
+// Creates list items for each pending data item.
+async function listPendingData() {
+    const template = document.querySelector('#pendingItem-template');
+    template.classList.remove('hidden');
+    const response = await fetch("/pendingData");
+    if (response.ok){
+        let pendingData = await response.json();
+        let pendingList = document.querySelector('#pendingList');
+        for (const data of pendingData){
+            const listItem = template.content.cloneNode(true);
+            const nameField = listItem.querySelector('.vendorName');
+            const dataField = listItem.querySelector('.data');
+
+            nameField.textContent = data.vendor_name;
+            dataField.textContent = data.data;
+
+            const rejectButton = listItem.querySelector('.rejectButton');
+            rejectButton.dataset.id = data.id;
+            rejectButton.addEventListener('click', rejectData);
+
+            const verifyButton = listItem.querySelector('.verifyButton');
+            verifyButton.dataset.id = data.id;
+            verifyButton.addEventListener('click', verifyData);
+
+            pendingList.append(listItem);
+        }
+    }
+} 
+
+// Fetches and displays all vendors from the database on the page.
 async function vendorList(){
     const response = await fetch('/vendorList');
     if (response.ok){
@@ -40,35 +80,76 @@ async function vendorList(){
             const template = document.querySelector('#vendorInfo-template');
             const listItem = template.content.cloneNode(true);
 
-            const name = listItem.querySelector('.vendorName');
+            const name = listItem.querySelector('.vendorNameText');
             name.textContent = vendor.vendor_name;
 
-            const linkedData = listItem.querySelector('.linkedData');
+            const linkedData = listItem.querySelector('.linkedDataText');
             linkedData.textContent = vendor.linked_data;
 
             const vendorList = document.querySelector('#vendorList');
+
+            const deleteButton = listItem.querySelector('.deleteButton');
+            deleteButton.dataset.id = vendor.vendor_id;
+            deleteButton.addEventListener('click', deleteVendor);
+            
             vendorList.append(listItem);
         }
     }   
 }
 
-async function removeVendor(){
-    const payload = { name : 'testVendor134565'}
-    const response = await fetch('/removeVendor', {
+// Deletes a vendor from the database.
+async function deleteVendor(e){
+    const payload = { id : e.target.dataset.id}
+    const response = await fetch('/deleteVendor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
     });
     if (response.ok) {
-        console.log('Vendor removed successfully');
+        refreshVendorList();
         vendorCount();
     }
 }
 
-function buttonEvents(){
-    let add = document.querySelector('#add');
-    let rmv = document.querySelector('#rmv');
+// Refresh the vendor list.
+function refreshVendorList(){
+    const list = document.querySelector('#vendorList');
+    list.innerHTML = '';
+    vendorList();
+}
 
-    add.addEventListener('click', addVendor);
-    rmv.addEventListener('click', removeVendor);
+// Deletes data items from the buffer
+async function rejectData(e){
+    const payload = { id : e.target.dataset.id}
+    const response = await fetch('/rejectData', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (response.ok) {
+        pendingDataCount();
+        refreshPendingList();
+    }
+}
+
+// Varify data button event
+async function verifyData(e){
+    const payload = { id : e.target.dataset.id };
+    const response = await fetch('/verifyData', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (response.ok) {
+        pendingDataCount();
+        refreshPendingList();
+        refreshVendorList();
+    }
+}
+
+// Set button events
+function buttonEvents(){
+    let pendingTab = document.querySelector('#pendingDataButton');
+
+    pendingTab.addEventListener('click', showPendingData);
 }

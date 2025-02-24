@@ -5,9 +5,15 @@
 
 <h1>Welcome to your PDV Data Manager</h1>
 
-<h1><code id="vendorCount">%num%</code> Vendors have access to your data</h1></h1>
-<button id="add">Add</button>
-<button id="rmv">Remove</button>
+<div id="pendingDataButton">Varify Data: <code id="verifyCount">0</code></div>
+<div class="hidden" id="pendingDataTab">
+    <div id="pendingList-container">
+        <div id="pendingList">
+        </div>
+    </div>
+</div>
+
+<h1><code id="vendorCount">%num%</code> Vendors have access to your data</h1>
 
 <h2>Vendor List</h2>
 <div id="vendorList-container">
@@ -16,10 +22,22 @@
 </div>
 
 <template id="vendorInfo-template">
-    <div class="vendorInfo">
-        <h3 class="vendorName">%name%</h3>
-        <p class="linkedData">%linked_data%</p>
-        <button class="edit">Edit</button>
-        <button class="delete">Delete</button>
+    <div class="vendorInfo listItem">
+        <div class="vendorNameTitle">Name:</div>
+        <div class="vendorNameText">%name%</div>
+        <div class="linkedDataTitle">Linked Data:</div>
+        <div class="linkedDataText">%linked_data%</div>
+        <div class="deleteButton button">Delete</div>
+    </div>
+</template>
+
+<template id="pendingItem-template">
+    <div class="pendingInfo listItem">
+        <h3 class="vendorName">%vendor%</h3>
+        <p class="data">%data%</p>
+        <div class="pendingButtonContainer">
+            <div class="verifyButton button" data-id>Verify</div>
+            <div class="rejectButton button" data-id>Reject</div>
+        </div>
     </div>
 </template>

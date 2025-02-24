@@ -3,16 +3,74 @@ body{
     padding: 0;
 }
 
+.hidden{
+    display: none;
+}
+
 #vendorList{
-    display:grid;
     border: solid 1px black;
-    height: 40rem;
     overflow: auto;
     scroll-behavior: auto;
 }
 
 .vendorInfo{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas: "nameTitle infoTitle buttons"
+                         "nameText infoText buttons";
     border: solid 1px black;
-    list-style-type: none;
     padding: 1rem;
+}
+
+.vendorNameText{
+    font-weight: bold;
+    grid-area: "nameText";
+}
+
+.linkedDataText{
+    grid-area: "infoText";
+}
+
+#pendingDataButton{
+    border: solid;
+    width: 6rem;
+    margin: 0 0 0 1rem;
+    text-align: center;
+    padding: 0.2rem;
+    cursor: pointer;
+}
+
+.listItem{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas: "name info buttons";
+    border: solid 2px;
+    padding: 1rem;
+    margin:0.1rem 0;
+}
+
+.data{
+    grid-area: info;
+}
+
+.button{
+    grid-area: buttons;
+    border: solid;
+    padding: 0.5rem;
+}
+
+.pendingButtonContainer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.verifyButton{
+    justify-content: left;
+    margin:0 0.5rem;
+}
+
+.rejectButton{
+    justify-content: right;
+    margin:0 0.5rem;
 }
