@@ -1,11 +1,3 @@
-//CREATE TABLE COMMANDS
-//CREATE DATABASE pdv;
-//use pdv;
-//CREATE TABLE user_data (id INT UNIQUE NOT NULL, type VARCHAR(32) NOT NULL, data VARCHAR(255));
-//CREATE TABLE vendor_info (vendor_id INT NOT NULL, vendor_name VARCHAR(64), linked_data VARCHAR(255));
-//CREATE TABLE data_buffer (id INT UNIQUE NOT NULL, type VARCHAR(32) NOT NULL, data VARCHAR(255));
-//ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '8592';
-
 import express from 'express';
 import mysql from 'mysql';
 
@@ -14,7 +6,32 @@ const app = express();
 const webRoot = './';
 app.use(express.static(webRoot));
 app.listen(8080);
+InitialiseDatabase();
 
+// Database Initialisation
+function InitialiseDatabase(){
+    const con = connectSQL();  
+    con.query("CREATE TABLE IF NOT EXISTS user_data (id INT UNIQUE NOT NULL, type VARCHAR(32) NOT NULL, data VARCHAR(255));", (err, result) =>
+        {
+            if (err) throw err;
+            console.log("Table user_data created");
+        });
+    con.query("CREATE TABLE IF NOT EXISTS vendor_info (vendor_id INT NOT NULL, vendor_name VARCHAR(64), linked_data VARCHAR(255));", (err, result) =>
+        {
+            if (err) throw err;
+            console.log("Table vendor_info created");
+        });
+    con.query("CREATE TABLE IF NOT EXISTS data_buffer (id INT UNIQUE NOT NULL, type VARCHAR(32) NOT NULL, data VARCHAR(255));", (err, result) =>
+        {
+            if (err) throw err;
+            console.log("Table data_buffer created");
+        });
+    con.query("ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '8592';", (err, result) =>{
+        if (err) throw err;
+        console.log("User password updated");
+    });
+    con.end();
+}
 // Server Functions
 
 // Middleware for CORS requests. Allows any origin to make requests to the server.
@@ -75,16 +92,39 @@ function removeVendor(req, res) {
     con.end();
 };
 
-// Returns a list of all vendors in the database.
-function getVendorList(req, res) {
+// Searches for the given data id and returns its data type.
+async function assignDataTypes(id, callback){
     const con = connectSQL();
-    con.query("SELECT * FROM vendor_info", (err, result) =>
-        {
+    con.query("SELECT type FROM user_data WHERE id = ?", [id], (err, result) => {
+        if (err) throw err;
+        return callback(result[0].type);
+    });
+}
+
+// Returns a list of all vendors in the database.
+async function getVendorList(req, res){
+    const con = connectSQL();
+    con.query("SELECT * FROM vendor_info", async (err, result) => {
             if (err) throw err;
-            res.json(result);
-        })
+            let vendorList = [];
+            // Converts the Linked Data ids into their data types for each vendor in the list
+            for (const vendor of result) {
+                let dataTypes = [];
+                let linkedData = vendor.linked_data.split(',');
+                for (const id of linkedData) {
+                    // Fetch data type for each linked data id
+                    let result = new Promise((resolve, reject) => {
+                        assignDataTypes(id, resolve);
+                    });
+                    dataTypes.push(await result);
+                }
+                vendorList.push({id: vendor.vendor_id, name: vendor.vendor_name, linked_data: dataTypes});
+            }
+            res.json(vendorList);
+    });
     con.end();
 }
+
 
 // Adds the given data to the buffer table so that it can be verified by the user later.
 function addDataToBuffer(datatype, data, vendorName){
@@ -212,6 +252,7 @@ function updateLinkedData(vendorName, dataID){
     con.end();
 }
 
+// Retrieves the count of all pending data in the buffer table. 
 function getPendingDataCount(req, res){
     const con = connectSQL();
     con.query("SELECT COUNT(*) as count FROM data_buffer;", (err, result) =>
@@ -221,6 +262,8 @@ function getPendingDataCount(req, res){
         });
     con.end();
 }
+
+// Retrieves all instances in the buffer table.
 function getPendingData(req, res){
     const con = connectSQL();
     con.query("SELECT * FROM data_buffer;", (err, result) =>
@@ -230,6 +273,8 @@ function getPendingData(req, res){
         });
     con.end();
 }
+
+// Deletes a specified data from the buffer table.
 function deleteData(req, res){
     const dataID = req.body.id;
     console.log(`Deleting data with ID ${dataID}`);

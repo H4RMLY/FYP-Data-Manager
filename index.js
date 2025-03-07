@@ -81,15 +81,23 @@ async function vendorList(){
             const listItem = template.content.cloneNode(true);
 
             const name = listItem.querySelector('.vendorNameText');
-            name.textContent = vendor.vendor_name;
+            name.textContent = vendor.name;
 
             const linkedData = listItem.querySelector('.linkedDataText');
-            linkedData.textContent = vendor.linked_data;
+            let linkedDataContent = '';
+            for (const datatype of vendor.linked_data){
+                // Check if data type already exists in the list to avoid duplicates
+                if (!linkedDataContent.includes(datatype)){
+                    linkedDataContent += `${datatype}, `;
+                }
+            }
+            linkedDataContent = linkedDataContent.slice(0, -2); // Remove trailing comma and space
+            linkedData.textContent = linkedDataContent;
 
             const vendorList = document.querySelector('#vendorList');
 
             const deleteButton = listItem.querySelector('.deleteButton');
-            deleteButton.dataset.id = vendor.vendor_id;
+            deleteButton.dataset.id = vendor.id;
             deleteButton.addEventListener('click', deleteVendor);
             
             vendorList.append(listItem);
