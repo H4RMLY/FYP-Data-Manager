@@ -6,32 +6,37 @@ const app = express();
 const webRoot = './';
 app.use(express.static(webRoot));
 app.listen(8080);
-InitialiseDatabase();
+//initialiseDatabase();
 
 // Database Initialisation
-function InitialiseDatabase(){
-    const con = connectSQL();  
-    con.query("CREATE TABLE IF NOT EXISTS user_data (id INT UNIQUE NOT NULL, type VARCHAR(32) NOT NULL, data VARCHAR(255));", (err, result) =>
-        {
-            if (err) throw err;
-            console.log("Table user_data created");
-        });
-    con.query("CREATE TABLE IF NOT EXISTS vendor_info (vendor_id INT NOT NULL, vendor_name VARCHAR(64), linked_data VARCHAR(255));", (err, result) =>
-        {
-            if (err) throw err;
-            console.log("Table vendor_info created");
-        });
-    con.query("CREATE TABLE IF NOT EXISTS data_buffer (id INT UNIQUE NOT NULL, type VARCHAR(32) NOT NULL, data VARCHAR(255));", (err, result) =>
-        {
-            if (err) throw err;
-            console.log("Table data_buffer created");
-        });
-    con.query("ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '8592';", (err, result) =>{
-        if (err) throw err;
-        console.log("User password updated");
-    });
-    con.end();
-}
+// New Commands
+// CREATE TABLE vendor_info (vendor_id INT UNIQUE NOT NULL, vendor_name VARCHAR(64) NOT NULL);
+// CREATE TABLE data_links (vendor_id INT NOT NULL, data_id INT NOT NULL);
+// CREATE TABLE data_buffer (data_id INT UNIQUE NOT NULL, data_type VARCHAR(32) NOT NULL, data VARCHAR(255));
+// CREATE TABLE user_data (data_id INT UNIQUE NOT NULL, data_type VARCHAR(32) NOT NULL, data VARCHAR(255));
+// function initialiseDatabase(){
+//     const con = connectSQL();  
+//     con.query("CREATE TABLE IF NOT EXISTS user_data (id INT UNIQUE NOT NULL, type VARCHAR(32) NOT NULL, data VARCHAR(255));", (err, result) =>
+//         {
+//             if (err) throw err;
+//             console.log(result.message);
+//         });
+//     con.query("CREATE TABLE IF NOT EXISTS vendor_info (vendor_id INT NOT NULL, vendor_name VARCHAR(64), linked_data VARCHAR(255));", (err, result) =>
+//         {
+//             if (err) throw err;
+//             console.log(result.message);
+//         });
+//     con.query("CREATE TABLE IF NOT EXISTS data_buffer (id INT UNIQUE NOT NULL, type VARCHAR(32) NOT NULL, data VARCHAR(255));", (err, result) =>
+//         {
+//             if (err) throw err;
+//             console.log(result.message);
+//         });
+//     con.query("ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '8592';", (err, result) =>{
+//         if (err) throw err;
+//         console.log(result.message);
+//     });
+//     con.end();
+// }
 // Server Functions
 
 // Middleware for CORS requests. Allows any origin to make requests to the server.
@@ -50,13 +55,14 @@ function connectSQL(){
         host: "localhost",
         user: "root",
         password: "8592",
-        database: "pdv"
+        database: "pdm"
       });
     con.connect(function(err) {
         if (err) throw err;
     });
     return con;
 }
+
 // Sends a count of all vendors in the database to the webpage.
 function countVendors(req, res){
     const con = connectSQL();
@@ -71,9 +77,8 @@ function countVendors(req, res){
 // Adds a new vendor to the database.
 function addVendor(name){
     const id = generateID();
-    const linkedData = "NULL";
     const con = connectSQL();
-    con.query('INSERT INTO vendor_info VALUES (?,?,?)', [id, name, linkedData], (err) =>
+    con.query('INSERT INTO vendor_info VALUES (?,?)', [id, name], (err) =>
         {
             if (err) throw err;
         })
@@ -84,43 +89,24 @@ function addVendor(name){
 function removeVendor(req, res) {
     const con = connectSQL();
     const id = req.body.id;
-    con.query("DELETE FROM vendor_info WHERE vendor_id = ?", [id], (err, result) =>
+    con.query("DELETE FROM vendor_info WHERE vendor_id = ?;", [id], (err, result) =>
         {
             if (err) throw err;
-            res.json("Vendor deleted");
-        })
-    con.end();
-};
-
-// Searches for the given data id and returns its data type.
-async function assignDataTypes(id, callback){
-    const con = connectSQL();
-    con.query("SELECT type FROM user_data WHERE id = ?", [id], (err, result) => {
-        if (err) throw err;
-        return callback(result[0].type);
+        });
+    con.query("DELETE FROM data_links WHERE vendor_id = ?;", [id], (err, result) =>
+        {
+            if (err) throw err;
     });
-}
+    con.end();
+    res.json("Vendor deleted");
+};
 
 // Returns a list of all vendors in the database.
 async function getVendorList(req, res){
     const con = connectSQL();
     con.query("SELECT * FROM vendor_info", async (err, result) => {
             if (err) throw err;
-            let vendorList = [];
-            // Converts the Linked Data ids into their data types for each vendor in the list
-            for (const vendor of result) {
-                let dataTypes = [];
-                let linkedData = vendor.linked_data.split(',');
-                for (const id of linkedData) {
-                    // Fetch data type for each linked data id
-                    let result = new Promise((resolve, reject) => {
-                        assignDataTypes(id, resolve);
-                    });
-                    dataTypes.push(await result);
-                }
-                vendorList.push({id: vendor.vendor_id, name: vendor.vendor_name, linked_data: dataTypes});
-            }
-            res.json(vendorList);
+            res.json(result);
     });
     con.end();
 }
@@ -139,19 +125,19 @@ function addDataToBuffer(datatype, data, vendorName){
     return id;
 }
 
+
 // Checks if the data in the buffer table already exists in user data. If so it updates the vendor linked data with the existing data id and discards the buffer.
 function checkData(dataId, data, vendorName){
     const con = connectSQL();
-    console.log(data);
     con.query("SELECT * FROM user_data WHERE data = ?", [data], (err, result) =>
         {
             if (err) throw err;
             if(result.length > 0){
-                console.log(`Data already exists in user data, updating linked data for vendor ${vendorName}`);
-                updateLinkedData(vendorName, result[0].id);
+                console.log(`Data already exists in user data, creating link to data for vendor ${vendorName}`);
+                linkData(vendorName, result[0].data_id);
                 deleteDataFromBuffer(dataId);
             } else {
-                console.log(`Data does not exist in user data, adding to buffer.`);
+                console.log(`Data does not exist in user data, adding to buffer for varifiaction.`);
             }
         })
     con.end();
@@ -160,7 +146,7 @@ function checkData(dataId, data, vendorName){
 // Deletes a specified data from the buffer table.
 function deleteDataFromBuffer(dataID){
     const con = connectSQL();
-    con.query("DELETE FROM data_buffer WHERE id = ?", [dataID], (err, result) =>
+    con.query("DELETE FROM data_buffer WHERE data_id = ?", [dataID], (err, result) =>
         {
             if (err) throw err;
         })
@@ -170,21 +156,22 @@ function deleteDataFromBuffer(dataID){
 // Moves the data from the buffer table to the user data table once it has been verified.
 function moveVerifiedData(req, res){
     const dataID = req.body.id; 
-    console.log(`Data ID ${dataID} moved to user data.`);
     const con = connectSQL()
-    con.query('SELECT * FROM data_buffer WHERE id = ?', [dataID], (err, result) => {
+    con.query('SELECT * FROM data_buffer WHERE data_id = ?', [dataID], (err, result) => {
         if (err) throw err; 
         if(result.length > 0){
             const data = result[0].data;
-            const type = result[0].type;
+            const type = result[0].data_type;
             const vendorName = result[0].vendor_name;
             con.query("INSERT INTO user_data VALUES (?, ?, ?);", [dataID, type, data], (err, result) =>
                 {
                     if (err) throw err;
+                    console.log(`Data ID ${dataID} moved to user data.`);
                 })
             res.json("Data varified");
-            updateLinkedData(vendorName, dataID);
+            linkData(vendorName, dataID);
             deleteDataFromBuffer(dataID);
+
         } else {
             console.log(`Data ID ${dataID} not found in buffer.`);
         }
@@ -197,6 +184,8 @@ function recvInfo(req, res){
     const type = req.body.datatype;
     const data = req.body.data;
 
+    console.log(`Received data for ${vendorName}: ${data}, type: ${type}`);
+
     // Check if the vendor already exists in the database.
     const con = connectSQL();
     con.query('SELECT vendor_name FROM vendor_info WHERE vendor_name = ?', [vendorName], (err, result) => {
@@ -205,7 +194,7 @@ function recvInfo(req, res){
         addDataToBuffer(type, data, vendorName);
         res.json(`Data updated for ${vendorName}`);
     } else {
-        // If vendor does not exist, add the vendor to the database and add the data ID to the vendordor's record.
+        // If vendor does not exist, add the vendor to the database and add the data ID to the vendor's record.
         addVendor(vendorName);
         addDataToBuffer(type, data, vendorName);
         res.json("Data received and stored");
@@ -227,30 +216,21 @@ function generateID(){
     return result;
 }
 
-// Writes the given string to the linked_data field of the given vendor in the vendor_info table.
-function writeLinkedData(vendorName, data){
+// Creates a link isntance between a vendor and a data entry inside the data_links table.
+function linkData(vendorName, dataId){  
     const con = connectSQL();
-    con.query('UPDATE vendor_info SET linked_data = ? WHERE vendor_name = ?;', [data, vendorName], (err, result) => {
+    con.query('SELECT vendor_id FROM vendor_info WHERE vendor_name = ?', [vendorName], (err, result) => {
         if (err) throw err;
-        console.log(result);
-    })
-    con.end();
-}
-
-// Reads the linked_data feild in the vendor_info table. Updates the string if the linked_data field is not null, otherwise adds the new data ID.
-function updateLinkedData(vendorName, dataID){
-    const con = connectSQL();
-    con.query('SELECT linked_data FROM vendor_info WHERE vendor_name = ?;', [vendorName], (err, result) => {
-        if (err) throw err;
-        if(result.length > 0 && result[0].linked_data!== "NULL"){
-            let newData = `${result[0].linked_data},${dataID}`
-            writeLinkedData(vendorName, newData);
+        if (!result.length > 0){
+            linkData(vendorName, dataId); // retries if vendor is still being added.
         } else {
-            writeLinkedData(vendorName, dataID);
+            const vendorId = result[0].vendor_id;
+            con.query('INSERT INTO data_links (vendor_id, data_id) SELECT ?, ? WHERE NOT EXISTS (SELECT * FROM data_links WHERE vendor_id = ? AND data_id = ?);', [vendorId, dataId, vendorId, dataId], (err, result) => {
+                if (err) throw err;
+            });
         }
-    });
-    con.end();
-}
+    });  
+ }
 
 // Retrieves the count of all pending data in the buffer table. 
 function getPendingDataCount(req, res){
@@ -282,11 +262,38 @@ function deleteData(req, res){
     res.json("Data deleted from buffer");
 }
 
+// Gets data types for a specific vendor to be displayed on the vendor list.
+function getVendorDataTypes(req, res){
+    const vendorId = req.body.vendor_id;
+    const con = connectSQL();
+    con.query('SELECT vendor_id, data_type FROM data_links, user_data WHERE user_data.data_id = data_links.data_id AND vendor_id = ?;', [vendorId], (err, result) => {
+        if (err) throw err;
+        let dataTypes = [];
+        for (const DT of result){
+            if (!dataTypes.includes(DT.data_type))
+            dataTypes.push(DT.data_type); 
+        } 
+        res.json(dataTypes);
+    });
+    con.end();
+}
+
+function getUserDataList(req, res){
+    const con = connectSQL();
+    con.query("SELECT DISTINCT data_type, data FROM vendor_info, data_links, user_data WHERE vendor_info.vendor_id = data_links.vendor_id AND user_data.data_id = data_links.data_id;", (err, result) => {
+        if (err) throw err;
+        res.json(result);
+    });
+    con.end();
+}
+
 // Routes
 app.get('/pendingData', getPendingData);
 app.get('/verifyDataCount', getPendingDataCount);
 app.get('/countVendors', countVendors);
 app.get('/vendorList', getVendorList);
+app.get('/getUserDataList', getUserDataList);
+app.post('/getVendorDataTypes', express.json(), getVendorDataTypes);
 app.post('/sendUserInfo', express.json(), recvInfo);
 app.post('/removeVendor', express.json(), removeVendor);
 app.post('/rejectData', express.json(), deleteData);

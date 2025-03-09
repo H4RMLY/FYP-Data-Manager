@@ -14,13 +14,23 @@
 </div>
 
 <h1><code id="vendorCount">%num%</code> Vendors have access to your data</h1>
-
-<h2>Vendor List</h2>
+<div id="nav-container">
+    <div class="navButton" id="vendorListButton">Vendor List</div>
+    <div class="navButton" id="userDataButton">Saved Data</div>
+</div>
 <div id="vendorList-container">
+    <h2>Vendor List</h2>
     <div id="vendorList">
+    </div>  
+</div>
+
+<div class="hidden" id="userData-container">
+    <h2>Your Saved Data</h2>
+    <div id="userDataList">
     </div>
 </div>
 
+<!-- Templates -->
 <template id="vendorInfo-template">
     <div class="vendorInfo listItem">
         <div class="vendorNameTitle">Name:</div>
@@ -35,9 +45,21 @@
     <div class="pendingInfo listItem">
         <h3 class="vendorName">%vendor%</h3>
         <p class="data">%data%</p>
-        <div class="pendingButtonContainer">
+        <div class="pendingButton-container">
             <div class="verifyButton button" data-id>Verify</div>
             <div class="rejectButton button" data-id>Reject</div>
+        </div>
+    </div>
+</template>
+
+<template id="userData-template">
+    <div class="listItem">
+        <div class="userDataVendors">%vendors%</div>
+        <div class="userData">%data%</div>
+        <div class="userDataType">%datatype%</div>
+        <div class="userDataButton-container">
+            <div class="editButton button">Edit</div>
+            <div class="deleteButton button">Delete</div>
         </div>
     </div>
 </template>

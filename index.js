@@ -1,14 +1,21 @@
 window.addEventListener('load', main);
-
+const tabs = {};
 
 async function main() {
+    setTabs();
     vendorCount();
     pendingDataCount()
     vendorList();
     listPendingData();
+    userDataList();
     buttonEvents();
 }
 
+function setTabs(){
+    tabs.vendorList = document.querySelector('#vendorList-container');
+    tabs.pendingData = document.querySelector('#pendingList-container');
+    tabs.userData = document.querySelector('#userData-container');
+}
 // Fetches the number of vendors in the database and displays it on the page.
 async function vendorCount() {
     const response = await fetch("/countVendors");
@@ -27,12 +34,6 @@ async function pendingDataCount() {
         let vCount = document.querySelector('#verifyCount');
         vCount.textContent = verifyDataCount;
     }
-}
-
-// Show pending data for varification.
-function showPendingData() {
-    const tab = document.querySelector('#pendingDataTab');
-    tab.classList.toggle('hidden');
 }
 
 // Referesh the pending data list.
@@ -59,11 +60,11 @@ async function listPendingData() {
             dataField.textContent = data.data;
 
             const rejectButton = listItem.querySelector('.rejectButton');
-            rejectButton.dataset.id = data.id;
+            rejectButton.dataset.id = data.data_id;
             rejectButton.addEventListener('click', rejectData);
 
             const verifyButton = listItem.querySelector('.verifyButton');
-            verifyButton.dataset.id = data.id;
+            verifyButton.dataset.id = data.data_id;
             verifyButton.addEventListener('click', verifyData);
 
             pendingList.append(listItem);
@@ -81,26 +82,52 @@ async function vendorList(){
             const listItem = template.content.cloneNode(true);
 
             const name = listItem.querySelector('.vendorNameText');
-            name.textContent = vendor.name;
+            name.textContent = vendor.vendor_name;
 
-            const linkedData = listItem.querySelector('.linkedDataText');
-            let linkedDataContent = '';
-            for (const datatype of vendor.linked_data){
-                // Check if data type already exists in the list to avoid duplicates
-                if (!linkedDataContent.includes(datatype)){
-                    linkedDataContent += `${datatype}, `;
-                }
+            const payload = { vendor_id: vendor.vendor_id };
+            const response = await fetch('/getVendorDataTypes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            if (response.ok){
+                let vendorDataTypes = await response.json();
+                let linkedData = listItem.querySelector('.linkedDataText');
+                linkedData.textContent = vendorDataTypes.join(', ');
             }
-            linkedDataContent = linkedDataContent.slice(0, -2); // Remove trailing comma and space
-            linkedData.textContent = linkedDataContent;
 
             const vendorList = document.querySelector('#vendorList');
 
             const deleteButton = listItem.querySelector('.deleteButton');
-            deleteButton.dataset.id = vendor.id;
+            deleteButton.dataset.id = vendor.vendor_id;
             deleteButton.addEventListener('click', deleteVendor);
             
             vendorList.append(listItem);
+        }
+    }   
+}
+
+// Fetches and displays all varified user data on the saved data list
+async function userDataList(){
+    const response = await fetch('/getUserDataList');
+    if (response.ok){
+        let userDataList = await response.json();
+        for (const data of userDataList){
+            const template = document.querySelector('#userData-template');
+            const listItem = template.content.cloneNode(true);
+
+            const vendors = listItem.querySelector('.userDataVendors');
+            vendors.textContent = data.vendor_name;
+
+            const userData = listItem.querySelector('.userData');
+            userData.textContent = data.data;
+
+            const dataType = listItem.querySelector('.userDataType');
+            dataType.textContent = data.data_type;
+
+            const userDataListElem = document.querySelector('#userDataList');
+            
+            userDataListElem.append(listItem);
         }
     }   
 }
@@ -155,9 +182,28 @@ async function verifyData(e){
     }
 }
 
+function hideAllTabs(){
+    tabs.userData.classList.add('hidden');
+    tabs.pendingData.classList.add('hidden');
+    tabs.vendorList.classList.add('hidden');
+}
+
 // Set button events
 function buttonEvents(){
     let pendingTab = document.querySelector('#pendingDataButton');
+    pendingTab.addEventListener('click', () => {
+        tabs.pendingData.classList.toggle('hidden');
+    });
 
-    pendingTab.addEventListener('click', showPendingData);
+    let vendorTab = document.querySelector('#vendorListButton');
+    vendorTab.addEventListener('click', () => {
+        hideAllTabs();
+        tabs.vendorList.classList.toggle('hidden');
+    }); 
+
+    let userDataTab = document.querySelector('#userDataButton');
+    userDataTab.addEventListener('click', () => {
+        hideAllTabs();
+        tabs.userData.classList.toggle('hidden');
+    });
 }
