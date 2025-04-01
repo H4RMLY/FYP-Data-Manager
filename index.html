@@ -13,11 +13,20 @@
     </div>
 </div>
 
+<div id="awaitingConfirmationButton">Awaiting Confirmation: <code id="awaitingCount">0</code></div>
+<div class="hidden" id="confirmationTab">
+    <div id="confimationList-container">
+        <div id="confrimationList">
+        </div>
+    </div>
+</div>
+
 <h1><code id="vendorCount">%num%</code> Vendors have access to your data</h1>
 <div id="nav-container">
-    <div class="navButton" id="vendorListButton">Vendor List</div>
+    <div class="selected navButton" id="vendorListButton">Vendor List</div>
     <div class="navButton" id="userDataButton">Saved Data</div>
 </div>
+
 <div id="vendorList-container">
     <h2>Vendor List</h2>
     <div id="vendorList">
@@ -53,13 +62,17 @@
 </template>
 
 <template id="userData-template">
-    <div class="listItem">
+    <div class="userDataItem listItem">
+        <div class="userDataVendorTitle">Linked Vendor(s):</div>
         <div class="userDataVendors">%vendors%</div>
-        <div class="userData">%data%</div>
+
+        <div class="userDataTitle">Data:</div>
+        <input type="text" class="userData" value="%data%" disabled>
+
+        <div class="userDataTypeTitle">Data Type:</div>
         <div class="userDataType">%datatype%</div>
-        <div class="userDataButton-container">
-            <div class="editButton button">Edit</div>
-            <div class="deleteButton button">Delete</div>
-        </div>
+        
+        <div class="editButton button">Edit</div>
+        <div class="deleteButton button">Delete</div>
     </div>
 </template>
