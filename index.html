@@ -16,7 +16,7 @@
 <div id="awaitingConfirmationButton">Awaiting Confirmation: <code id="awaitingCount">0</code></div>
 <div class="hidden" id="confirmationTab">
     <div id="confimationList-container">
-        <div id="confrimationList">
+        <div id="confirmationList">
         </div>
     </div>
 </div>
@@ -25,16 +25,28 @@
 <div id="nav-container">
     <div class="selected navButton" id="vendorListButton">Vendor List</div>
     <div class="navButton" id="userDataButton">Saved Data</div>
+    <div id="filter">
+        <div class="navButton" id="filterButton">Filter</div>
+        <div id="filterTab-container" class="hidden">   
+            <label for="userDataFilter">Filter By:</label>
+            <select name="userDataFilter" id="filterBy">
+                <option value="none">None</option>
+                <option value="vendor">Vendor</option>
+                <option value="dataType">Data Type</option>
+                <option id="dataOption" value="data" disabled>Data</option>
+            </select>
+            <input id="filterInput" type="text" placeholder="Matching">
+            <button id="applyFilterButton">Apply</button>
+        </div>
+    </div>
 </div>
 
 <div id="vendorList-container">
-    <h2>Vendor List</h2>
     <div id="vendorList">
     </div>  
 </div>
 
 <div class="hidden" id="userData-container">
-    <h2>Your Saved Data</h2>
     <div id="userDataList">
     </div>
 </div>
@@ -74,5 +86,18 @@
         
         <div class="editButton button">Edit</div>
         <div class="deleteButton button">Delete</div>
+    </div>
+</template>
+
+<template id="awaitingConfirmation-template">
+    <div class="awaitingConfirmationItem ListItem">
+        <p class="ADVendorNameTitle">Vendor Name:</p>
+        <p class="ADVendorName">%vendor%</p>
+
+        <p class="awaitingDataTitle">Data:</p>
+        <p class="awaitingData">%data%</p>
+
+        <p class="ADPurposeTitle">Awaiting:</p>
+        <p class="ADPurpose">%purpose%</p>
     </div>
 </template>

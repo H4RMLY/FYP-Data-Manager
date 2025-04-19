@@ -23,79 +23,59 @@ const corsMiddleware = async function(req, res, next) {
 }
 
 app.use(corsMiddleware);
-// function to connect to the MySQL database.
-async function connectSQL(){
-    const pool = mysql.createPool({
-        host: "localhost",
-        user: "root",
-        password: "8592",
-        database: "pdm",
-        connectionLimit: 10,
-    })
-    return pool;
-}   
 
-async function oldconnectSQL(){
+async function connectSQL(){
     const con = mysql.createConnection({
         host: "localhost",
         user: "root",
         password: "8592",
         database: "pdm"
       });
-    con.connect(async function(err) {
+    con.connect(function(err) {
         if (err) throw err;
     });
     return con;
 }
 
+const con = await connectSQL();
+
 // Sends a count of all vendors in the database to the webpage.
 async function countVendors(req, res){
-    const con = await connectSQL();
     con.query("SELECT COUNT(DISTINCT vendor_info.vendor_id) as count FROM vendor_info, data_links WHERE vendor_info.vendor_id = data_links.vendor_id;", (err, result) =>
         {
             if (err) throw err;
             res.json(result[0].count);
         });
-     con.release()
 }
 
 // Adds a new vendor to the database.
 async function addVendor(vendorURL, vendorName){
     const vendorId = await generateID();
-    const con = await connectSQL();
-    con.query('INSERT INTO vendor_info VALUES (?,?,?)', [vendorId, vendorName, vendorURL], (err) =>
-        {
+    con.query('INSERT INTO vendor_info VALUES (?,?,?)', [vendorId, vendorName, vendorURL], (err) => {
             if (err) throw err;
-        })
-    // con.end();
+        });
 }
 
 // Removes a specified vendor from the database and its links.
 async function removeVendor(req, res) {
-    const con = await connectSQL();
     const id = req.body.id;
     // Delete vendor
-    con.query("DELETE FROM vendor_info WHERE vendor_id = ?;", [id], (err, result) =>
-        {
-            if (err) throw err;
-        });
-    // Delete links
-    con.query("DELETE FROM data_links WHERE vendor_id = ?;", [id], (err, result) =>
-        {
-            if (err) throw err;
+    con.query("DELETE FROM vendor_info WHERE vendor_id = ?;", [id], (err, result) => {
+        if (err) throw err;
     });
-    // con.end();
+    // Delete links
+    con.query("DELETE FROM data_links WHERE vendor_id = ?;", [id], (err, result) => {
+        if (err) throw err;
+    });
     res.json("Vendor deleted");
 };
 
 // Returns a list of all vendors in the vendor_info database.
 async function getVendorList(req, res){
-    const con = await connectSQL();
     con.query("SELECT * FROM vendor_info", async (err, result) => {
-            if (err) throw err;
-            res.json(result);
+        if (err) throw err;
+        res.json(result);
     });
-    // con.end();
 }
 
 
@@ -104,13 +84,10 @@ async function addDataToBuffer(datatype, data, vendorName, purpose, dataId = 0){
     if (dataId === 0){
         dataId = await generateID();
     }
-    const con = await connectSQL();
-    con.query("INSERT INTO data_buffer VALUES (?, ?, ?, ?, ?);", [dataId, datatype, data, vendorName, purpose], (err, result) =>
-        {
-            if (err) throw err;
-        })
-    // con.end();
-    if (!purpose.includes('pending')){
+    con.query("INSERT INTO data_buffer VALUES (?, ?, ?, ?, ?);", [dataId, datatype, data, vendorName, purpose], (err, result) =>{
+        if (err) throw err;
+    });
+    if (!purpose.includes('awaiting')){
         checkData(dataId, data, vendorName);
     }
     return dataId;
@@ -119,7 +96,6 @@ async function addDataToBuffer(datatype, data, vendorName, purpose, dataId = 0){
 
 // Checks if the data in the buffer table already exists in user data. If so it creates a link with the existing data id and discards the buffer.
 async function checkData(dataId, data, vendorName){
-    const con = await connectSQL();
     con.query("SELECT * FROM user_data WHERE data = ?", [data], (err, result) =>
         {
             if (err) throw err;
@@ -130,26 +106,22 @@ async function checkData(dataId, data, vendorName){
             } else {
                 console.log(`Data does not exist in user data, adding to buffer for varifiaction.`);
             }
-        })
-    // con.end();
+        });
 }
 
 async function deleteLinks(dataId){
-    const con = await connectSQL();
     con.query("DELETE FROM data_links WHERE data_id =?", [dataId], (err, result) =>
         {
             if (err) throw err;
-        })
+        });
 }
 
 // Deletes a specified data from the buffer table.
 async function deleteDataFromBuffer(dataID){
-    const con = await connectSQL();
     con.query("DELETE FROM data_buffer WHERE data_id = ?", [dataID], (err, result) =>
         {
             if (err) throw err;
-        })
-    // con.end();
+        });
 }
 
 // Moves the data from the buffer table to the user data table once it has been verified.
@@ -169,15 +141,15 @@ async function moveVerifiedData(req, res){
                     if (err) throw err;
                     console.log(`Data ID ${dataID} moved to user data.`);
                 });
-            // con.end();
             res.json("Data varified");
             // create link to vendor and delete from buffer
             linkData(vendorName, dataID);
             deleteDataFromBuffer(dataID);
+            mergeData(data);
         } else {
             console.log(`Data ID ${dataID} not found in buffer.`);
         }
-    })
+    });
 }
 
 // Main recv async function that receives the user submitted data, datatype, vendor name and vendor ID
@@ -190,20 +162,18 @@ async function recvInfo(req, res){
     console.log(`Received data from ${vendorURL} for ${vendorName}: ${data}, type: ${type}`);
 
     // Check if the vendor already exists in the database.
-    const con = await connectSQL();
-    con.query('SELECT vendor_name FROM vendor_info WHERE vendor_name = ?', [vendorName], (err, result) => {
-    if(result.length > 0){
+    con.query('SELECT vendor_name FROM vendor_info WHERE vendor_name = ?', [vendorName], async (err, result) => {
+    if(await result.length > 0){
         // If vendor exists, only add data to buffer
-        addDataToBuffer(type, data, vendorName, "awaiting verification");
+        addDataToBuffer(type, data, vendorName, "pending verification");
         res.json(`Data updated for ${vendorName}`);
     } else {
         // If vendor does not exist, create new vendor and add data to buffer
         addVendor(vendorURL, vendorName);
-        addDataToBuffer(type, data, vendorName, "awaiting verification");
+        addDataToBuffer(type, data, vendorName, "pending verification");
         res.json("Data received and stored");
     }
     });
-    // con.end();
 }
 
 // Generates a unique 8 digit ID.
@@ -221,7 +191,6 @@ async function generateID(){
 
 // Creates a link instance between a vendor and a data entry inside the data_links table.
 async function linkData(vendorName, dataId){  
-    const con = await connectSQL();
     con.query('SELECT vendor_id FROM vendor_info WHERE vendor_name = ?', [vendorName], (err, result) => {
         if (err) throw err;
         if (!result.length > 0){
@@ -231,61 +200,51 @@ async function linkData(vendorName, dataId){
             con.query('INSERT INTO data_links (vendor_id, data_id) SELECT ?, ? WHERE NOT EXISTS (SELECT * FROM data_links WHERE vendor_id = ? AND data_id = ?);', [vendorId, dataId, vendorId, dataId], (err, result) => {
                 if (err) throw err;
             });
-            // con.end();
         }
-    }); 
+    });
  }
 
 // Retrieves a count of all pending data in the buffer table. 
 async function getPendingDataCount(req, res){
-    const con = await connectSQL();
-    con.query("SELECT COUNT(*) as count FROM data_buffer WHERE purpose = 'awaiting verification';", (err, result) => {
+    con.query("SELECT COUNT(*) as count FROM data_buffer WHERE purpose = 'pending verification';", (err, result) => {
             if (err) throw err;
             res.json(result[0].count);
     });
-    // con.end();
 }
 
 // Retrieves all instances in the buffer table.
 async function getPendingData(req, res){
-    const con = await connectSQL();
-    con.query("SELECT * FROM data_buffer WHERE purpose = 'awaiting verification';", (err, result) => {
+    con.query("SELECT * FROM data_buffer WHERE purpose = 'pending verification';", (err, result) => {
             if (err) throw err;
             res.json(result);
     });
-    // con.end();
 }
 
 // Deletes a specified data from the buffer table.
 async function deleteData(dataId){
-    const con = await connectSQL();
     con.query("DELETE FROM user_data WHERE data_id = ?", [dataId], (err, result) => {
             if (err) throw err;
             deleteLinks(dataId);
     });
-    // con.end();
     deleteDataFromBuffer(dataId);
 }
 
 // Gets data types for a specific vendor to be displayed on the vendor list.
 async function getVendorDataTypes(req, res){
     const vendorId = req.body.vendor_id;
-    const con = await connectSQL();
     con.query('SELECT vendor_id, data_type FROM data_links, user_data WHERE user_data.data_id = data_links.data_id AND vendor_id = ?;', [vendorId], (err, result) => {
         if (err) throw err;
         let dataTypes = [];
         for (const DT of result){
-            if (!dataTypes.includes(DT.data_type))
+            //if (!dataTypes.includes(DT.data_type))
             dataTypes.push(DT.data_type); 
         } 
         res.json(dataTypes);
     });
-    // con.end();
 }
 
 // Gets all linked vendor names for the given data id and returns a list
 async function getLinkedVendorName(data_id, callback){
-    const con = await connectSQL();
     con.query('SELECT vendor_name, vendor_info.vendor_id FROM data_links, vendor_info WHERE data_links.vendor_id = vendor_info.vendor_id AND data_links.data_id =?;', [data_id], (err, result) => {
         if (err) throw err;
         let vendors = [];
@@ -294,12 +253,10 @@ async function getLinkedVendorName(data_id, callback){
         }
         return callback(vendors);
     });
-    // con.end();
 }
 
 // Gets all user data then checks each data for vendors that are linked to it.
 async function getUserDataList(req, res){
-    const con = await connectSQL();
     let userData;
     // Gets all user data
     con.query("SELECT * FROM user_data", async (err, result) => {
@@ -310,68 +267,59 @@ async function getUserDataList(req, res){
             let result = new Promise((resolve, reject) => {
                 getLinkedVendorName(data.data_id, resolve);
             });
-            userData[userData.indexOf(data)].vendor_names = await result.vendors;
+            userData[userData.indexOf(data)].vendor_names = await result;
         }
-        res.json(userData);
+        res.json(userData); 
     });
-    // con.end();
 }
 
 // Edits the data with the given id 
 async function editData(dataId, newData){
-    const con = await connectSQL();
     con.query('UPDATE user_data SET data = ? WHERE data_id = ?;', [newData, dataId], (err, result) => {
         if (err) throw err;
         console.log(`Data ID ${dataId} updated to ${newData}`);
     });
-    // con.end();
+    mergeData(newData);
     deleteDataFromBuffer(dataId);
 }
 
 async function addDataToUserData(data_id, data_type, data){
-    const con = await connectSQL();
     con.query('INSERT INTO user_data VALUES (?, ?, ?);', [data_id, data_type, data], (err, result) => {
         if (err) throw err;
     });
-    // con.end();
 }
 
 // Merges the linked vendors of two of the same data instance into one and leaves only one instance of that data
 async function mergeData(data){
-    // TODO: Implement merging data logic
-    const con = await await connectSQL();
     con.query('SELECT COUNT(*) as count FROM user_data WHERE data = ?;', [data], (err, result) => {
         if (err) throw err;
-        console.log(result);
+        console.log(result[0].count);
         if (result[0].count > 1){
             con.query('SELECT data_id, data_type FROM user_data WHERE data = ?;', [data], async (err, result) => {
                 if (err) throw err;
                 let vendors = [];
                 for (const data of result){
-                    let linkedVendors = await new Promise((resolve) => {
-                        getLinkedVendorName(data.data_id, resolve);
+                    let linkedVendors = await new Promise(async (resolve) => {
+                       getLinkedVendorName(data.data_id, resolve);
                     });
-                    for (const vendor of linkedVendors){
+                    for (const vendor of await linkedVendors){
                         vendors.push(vendor)
                     }
                     deleteData(data.data_id);
                 };
                 addDataToUserData(result[0].data_id, result[0].data_type, data);
                 for (const vendor of vendors){
-                    linkData(vendor.vendor_name, result[0].data_id);
+                    console.log(`Linking vendor ${vendor} to data ID ${result[0].data_id}`);
+                    linkData(vendor, result[0].data_id);
                 }
             });
-            // con.end();
         }
     });
 }
 
-mergeData("testingData, , ");
-
 async function informVendor(req, res){
     let sourceIp = req.connection.localAddress;
     const sourceURL = `${sourceIp.replace(/[:f]/g, '')}:${req.connection.localPort}`;
-    const con = await connectSQL();
     con.query("SELECT vendor_url, vendor_name, data, data_type, user_data.data_id FROM vendor_info, user_data, data_links WHERE vendor_info.vendor_id = data_links.vendor_id AND user_data.data_id = data_links.data_id AND data_links.data_id = ?;", [req.body.dataId], async (err, result) => {
         if (err) throw err;
         for (const vendor of result){
@@ -385,10 +333,10 @@ async function informVendor(req, res){
             };
             if (req.body.decision === "EDIT"){
                 payload.newData = req.body.newData;
-                addDataToBuffer(vendor.data_type, payload.newData, payload.vendor_name, 'pending edit', payload.data_id);
+                addDataToBuffer(vendor.data_type, payload.newData, payload.vendor_name, 'awaiting edit', payload.data_id);
             } else {
                 console.log(`adding ${vendor.data_id} to buffer for delete`);
-                addDataToBuffer(vendor.data_type, payload.data, payload.vendor_name, 'pending delete', payload.data_id);
+                addDataToBuffer(vendor.data_type, payload.data, payload.vendor_name, 'awaiting delete', payload.data_id);
             }
             console.log(`Sending payload: ${JSON.stringify(payload)} to vendor @ ${vendorURL}`);
             const response = await fetch(`http://${vendorURL}/decisionRecv`, {
@@ -396,7 +344,6 @@ async function informVendor(req, res){
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
-            // con.end();
             if (response.ok) {
                 let msg = await response.json();
                 console.log(`Message from vendor: "${msg}"`);
@@ -404,9 +351,8 @@ async function informVendor(req, res){
                 console.error(`Error sending payload to vendor: ${response.error}`);
             }
         }
-        res.status(200);
+        res.json("Vendor Informed");
     });
-     
 }
 
 async function enactLocalDecision(req, res){
@@ -417,12 +363,10 @@ async function enactLocalDecision(req, res){
     console.log(`Confirmation of ${decision} received`);
     if (decision === "EDIT"){
         console.log(`updating data for ${dataId}`);
-        const con = await connectSQL();
-        con.query("SELECT data FROM data_buffer WHERE data_id = ? AND purpose = 'pending edit';", [dataId], (err, result) => {
+        con.query("SELECT data FROM data_buffer WHERE data_id = ? AND purpose = 'awaiting edit';", [dataId], (err, result) => {
             if (err) throw err;
             editData(dataId, result[0].data);
         });
-        // con.end();
     } else if (decision === "DELETE"){
         console.log(`Deleting data for ${dataId}`);
         deleteData(dataId);
@@ -430,16 +374,22 @@ async function enactLocalDecision(req, res){
     res.status(200).send("Decision processed");
 }
 
-async function getAwaitingConfirmationCount(req, res){
-    const con = await connectSQL();
-    con.query("SELECT COUNT(*) as count FROM data_buffer WHERE purpose LIKE '%pending%';", (err, result) =>
+async function getAwaitingDataInfo(req, res){
+    let data = [{count: 0}];
+    data[1] = await new Promise((resolve, reject) => {
+        getAwaitingData(resolve);
+    });
+    data[0].count = data[1].length; 
+    res.json(data);
+} 
+
+function getAwaitingData(callback){
+    con.query("SELECT * FROM data_buffer WHERE purpose LIKE '%awaiting%';", (err, result) =>
         {
             if (err) throw err;
-            console.log(`Awaiting confirmation count: ${result[0].count}`);
-            res.json(result[0].count);
+            callback(result);
         });
-    // con.end();
-} 
+}
 
 // Routes
 app.get('/pendingData', getPendingData);
@@ -448,7 +398,7 @@ app.get('/countVendors', countVendors);
 app.get('/vendorList', getVendorList);
 app.get('/getUserDataList', getUserDataList);
 app.get('/decisionResponse/:decision', enactLocalDecision);
-// app.get('/awaitingCount', getAwaitingConfirmationCount);
+app.get('/awaitingData', getAwaitingDataInfo);
 app.post('/getVendorDataTypes', express.json(), getVendorDataTypes);
 app.post('/sendUserInfo', express.json(), recvInfo);
 app.post('/removeVendor', express.json(), removeVendor);

@@ -4,7 +4,7 @@ body{
 }
 
 .hidden{
-    display: none;
+    display: none !important;
 }
 
 .selected{
@@ -12,8 +12,13 @@ body{
     background-color: lightgray;
 }
 
+#nav-container {
+    display: grid;
+    grid-template-columns: 7rem 1fr 9rem;
+    margin: 0 0 0.5rem 0;
+}
+
 .navButton{
-    display: inline;
     border: solid;
     width: 6rem;
     margin: 0 0 0 1rem;
@@ -96,11 +101,30 @@ body{
         justify-content: right;
         margin:0 0.5rem;
     }
-
 }
 
 .userDataList{
     border: solid 1px;
+}
+
+#vendorListButton{
+    height:1.5rem;
+}
+
+#userDataButton{
+    height:1.5rem;
+}
+
+#filterButton{
+    height:1.5rem;
+}
+
+#filterTab-container{
+    width: 10rem;
+  height: 4rem;
+  border: solid;
+  margin: 0 -3.5rem;
+  padding: 0.3rem 0.6rem 0.3rem 0.3rem
 }
 
 .userDataItem{
@@ -152,9 +176,42 @@ body{
 
 }
 
+.awaitingConfirmationItem {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas: "vendorTitle dataTitle purposeTitle"
+                         "vendorText dataText purposeText";
+    padding: 1rem;
+    margin: 0 0.5rem 0 0.5rem;
+
+    border: 2px solid;
+    >.ADVendorNameTitle{
+        font-weight: bold;
+        grid-area: vendorTitle;
+    }
+    >.ADVendorName{
+        grid-area: vendorText;
+    }
+    >.awaitingDataTitle{
+        font-weight: bold;
+        grid-area: dataTitle;
+    }
+    >.awaitingData{
+        grid-area: dataText;
+    }
+    >.ADPurposeTitle{
+        font-weight: bold;
+        grid-area: purposeTitle;
+    }
+    >.ADPurpose{
+        grid-area: purposeText;
+    }
+}
+
 input:disabled{
     color:black;
 }
+
 input:enabled{
     background-color:rgb(237, 237, 237);
 }
