@@ -1,4 +1,4 @@
-#Final Year Project - Personal Data Manager
+# Final Year Project - Personal Data Manager
 ## What is it?
 This proof of concept data manager aims to make data subjects better data controllers by allowing them to make GDPR requests from a central location. 
 The applciaiton also servers as decentralised data store so that users can track their data on a device that they own and control instead of relying 
