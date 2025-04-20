@@ -5,6 +5,11 @@ The applciaiton also servers as decentralised data store so that users can track
 on companies like lastpass to do this for them.
 ### Applicaiton Side
 This contains a data manager server and webpage.
+### Dependancies
+- MySQL server running on the same machine as the applicaiton.
+- Node.js
 ### Vendor Client
 This is a sample vendor client that interacts and sends data to the manager.
+### Dependancies
+- Node.js
 ## How it works
