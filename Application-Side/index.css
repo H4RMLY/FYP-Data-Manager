@@ -1,0 +1,236 @@
+body{
+    margin: 0;
+    padding: 0;
+}
+
+.hidden{
+    display: none !important;
+}
+
+.selected{
+    font-weight: bold;
+    background-color: lightgray;
+}
+
+#nav-container {
+    display: grid;
+    grid-template-columns: 7rem 1fr 9rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.navButton{
+    border: solid;
+    width: 6rem;
+    margin: 0 0 0 1rem;
+    text-align: center;
+    padding: 0.2rem;
+    cursor: pointer;
+}
+
+#vendorList{
+    border: solid 1px black;
+    overflow: auto;
+    scroll-behavior: auto;
+}
+
+.vendorInfo{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas: "nameTitle infoTitle buttons"
+                         "nameText infoText buttons";
+    border: solid 1px black;
+    padding: 1rem;
+}
+
+.vendorNameText{
+    font-weight: bold;
+    grid-area: "nameText";
+}
+
+.linkedDataText{
+    grid-area: "infoText";
+}
+
+#pendingDataButton{
+    border: solid;
+    width: 6rem;
+    margin: 0 0 0 1rem;
+    text-align: center;
+    padding: 0.2rem;
+    cursor: pointer;
+}
+
+#awaitingConfirmationButton{
+    border: solid;
+    width: 8rem;
+    margin: 0.5rem 0 0 1rem;
+    text-align: center;
+    padding: 0.2rem;
+    cursor: pointer;
+}
+
+.listItem{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas: "name info buttons";
+    border: solid 2px;
+    padding: 1rem;
+    margin:0.1rem 0;
+}
+
+.data{
+    grid-area: info;
+}
+
+.button{
+    grid-area: buttons;
+    border: solid;
+    padding: 0.5rem;
+}
+
+.pendingButton-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    >.verifyButton{
+        justify-content: left;
+        margin:0 0.5rem;
+    }
+    >.rejectButton{
+        justify-content: right;
+        margin:0 0.5rem;
+    }
+}
+
+.userDataList{
+    border: solid 1px;
+}
+
+#vendorListButton{
+    height:1.5rem;
+}
+
+#userDataButton{
+    height:1.5rem;
+}
+
+#filterButton{
+    height:1.5rem;
+}
+
+#filterTab-container{
+    width: 10rem;
+  height: 4rem;
+  border: solid;
+  margin: 0 -3.5rem;
+  padding: 0.3rem 0.6rem 0.3rem 0.3rem
+}
+
+.userDataItem{
+    display: grid;
+    grid-template-columns: 15rem 15rem 15rem 1fr;
+    grid-template-areas: "vendorTitle dataTitle typeTitle button1"
+                         "vendorText dataText typeText button2";
+    padding: 1rem;
+    margin: 0 0.5rem 0 0.5rem;
+
+    >.userDataVendorTitle{
+        font-weight: bold;
+        grid-area: vendorTitle;
+    }
+    >.userDataVendors{
+        overflow: hidden;
+        grid-area: vendorText;
+    }
+
+    >.userDataTitle{
+        font-weight: bold;
+        grid-area: dataTitle;
+    }
+    >.userData{
+        overflow: hidden;
+        text-overflow:  ellipsis;
+        word-wrap:normal;
+        grid-area: dataText;
+        font-family: inherit;
+        font-size: inherit;
+        border: none;
+        line-height: 1.2;
+        height: 1.2rem;
+    }
+    >.userDataTypeTitle{
+        font-weight: bold;
+        grid-area: typeTitle;
+    }
+    >.userDataType{
+        grid-area: typeText;
+    }
+
+    >.editButton{
+        grid-area: button1;
+    }
+    >.deleteButton{
+        grid-area: button2;
+    }
+
+}
+
+.awaitingConfirmationItem {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas: "vendorTitle dataTitle purposeTitle"
+                         "vendorText dataText purposeText";
+    padding: 1rem;
+    margin: 0 0.5rem 0 0.5rem;
+
+    border: 2px solid;
+    >.ADVendorNameTitle{
+        font-weight: bold;
+        grid-area: vendorTitle;
+    }
+    >.ADVendorName{
+        grid-area: vendorText;
+    }
+    >.awaitingDataTitle{
+        font-weight: bold;
+        grid-area: dataTitle;
+    }
+    >.awaitingData{
+        grid-area: dataText;
+    }
+    >.ADPurposeTitle{
+        font-weight: bold;
+        grid-area: purposeTitle;
+    }
+    >.ADPurpose{
+        grid-area: purposeText;
+    }
+}
+
+input:disabled{
+    color:black;
+}
+
+input:enabled{
+    background-color:rgb(237, 237, 237);
+}
+
+.active{
+    border: dotted 1px ;
+}
+
+.userDataTypeText{
+    grid-area: typeText;
+}
+
+.userDataButton{
+    > editButton{
+        grid-area: button1;
+    }
+    > deleteButton{
+        grid-area: button2;
+    }
+}
+
+

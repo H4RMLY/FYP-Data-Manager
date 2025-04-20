@@ -1,0 +1,24 @@
+.form{
+    display:grid;
+    grid-template-columns: 1fr;
+    > input{
+        width: 10rem;
+        margin: 0 0 0.5rem 0;
+        height: 1rem;
+    }
+    > button{
+        margin: 0 0 0.5rem 0;
+        width: 10rem;
+        height: 1.5rem;
+    }
+}
+
+#form-container{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "1 2";
+}
+
+#card-form{
+    grid-area: 1;
+}

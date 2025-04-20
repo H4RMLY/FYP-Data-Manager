@@ -1,0 +1,30 @@
+<!doctype html>
+<title>PDV | Home</title>
+<script defer src="index.js"></script>
+<link rel="stylesheet" href="index.css">
+
+<h1>This is a test client</h1>
+<input id="url" name='url' type="text" placeholder="URL">
+<input id="vendorName" name="vendorName" placeholder="Vendor Name">
+<p id="serverMsg">Message From Server</p>
+
+<div id="form-container">
+    <div class="form" id="address-form">
+        <h2 id="address-title">Address</h2>
+        <input class="addr-input" id="addr1" name='addr1' type="text" placeholder="Address Line 1">
+        <input class="addr-input" id="addr2" name='addr2' type="text" placeholder="Address Line 2 (optional)">
+        <input class="addr-input" id="city" name='city' type="text" placeholder="City/Town">
+        <input class="addr-input" id="county" name='county' type="text" placeholder="County (optional)">
+        <input class="addr-input" id="postcode" name='postcode' type="text" placeholder="Postcode">
+        <button id="submit-address" data-type="address">Submit Address</button>
+    </div>
+
+    <div class="form" id="card-form">
+        <h2 id="card-title">Card Details</h2>
+        <input class="card-input" id="cardNumber" name="cardNumber" placeholder="Card Number">
+        <input class="card-input" id="expiryDate" name="expiryDate" placeholder="Expiry Date (MM/YY)">
+        <input class="card-input"  id="cvv" name="cvv" placeholder="CVV">
+        <button id="submit-card" data-type="card">Submit Card</button>
+    </div>
+</div>
+

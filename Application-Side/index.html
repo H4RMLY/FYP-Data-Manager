@@ -1,0 +1,103 @@
+<!doctype html>
+<title>PDV | Home</title>
+<link rel="stylesheet" href="index.css">
+<script defer src="index.js"></script>
+
+<h1>Welcome to your PDV Data Manager</h1>
+
+<div id="pendingDataButton">Varify Data: <code id="verifyCount">0</code></div>
+<div class="hidden" id="pendingDataTab">
+    <div id="pendingList-container">
+        <div id="pendingList">
+        </div>
+    </div>
+</div>
+
+<div id="awaitingConfirmationButton">Awaiting Confirmation: <code id="awaitingCount">0</code></div>
+<div class="hidden" id="confirmationTab">
+    <div id="confimationList-container">
+        <div id="confirmationList">
+        </div>
+    </div>
+</div>
+
+<h1><code id="vendorCount">%num%</code> Vendors have access to your data</h1>
+<div id="nav-container">
+    <div class="selected navButton" id="vendorListButton">Vendor List</div>
+    <div class="navButton" id="userDataButton">Saved Data</div>
+    <div id="filter">
+        <div class="navButton" id="filterButton">Filter</div>
+        <div id="filterTab-container" class="hidden">   
+            <label for="userDataFilter">Filter By:</label>
+            <select name="userDataFilter" id="filterBy">
+                <option value="none">None</option>
+                <option value="vendor">Vendor</option>
+                <option value="dataType">Data Type</option>
+                <option id="dataOption" value="data" disabled>Data</option>
+            </select>
+            <input id="filterInput" type="text" placeholder="Matching">
+            <button id="applyFilterButton">Apply</button>
+        </div>
+    </div>
+</div>
+
+<div id="vendorList-container">
+    <div id="vendorList">
+    </div>  
+</div>
+
+<div class="hidden" id="userData-container">
+    <div id="userDataList">
+    </div>
+</div>
+
+<!-- Templates -->
+<template id="vendorInfo-template">
+    <div class="vendorInfo listItem">
+        <div class="vendorNameTitle">Name:</div>
+        <div class="vendorNameText">%name%</div>
+        <div class="linkedDataTitle">Linked Data:</div>
+        <div class="linkedDataText">%linked_data%</div>
+        <div class="deleteButton button">Delete</div>
+    </div>
+</template>
+
+<template id="pendingItem-template">
+    <div class="pendingInfo listItem">
+        <h3 class="vendorName">%vendor%</h3>
+        <p class="data">%data%</p>
+        <div class="pendingButton-container">
+            <div class="verifyButton button" data-id>Verify</div>
+            <div class="rejectButton button" data-id>Reject</div>
+        </div>
+    </div>
+</template>
+
+<template id="userData-template">
+    <div class="userDataItem listItem">
+        <div class="userDataVendorTitle">Linked Vendor(s):</div>
+        <div class="userDataVendors">%vendors%</div>
+
+        <div class="userDataTitle">Data:</div>
+        <input type="text" class="userData" value="%data%" disabled>
+
+        <div class="userDataTypeTitle">Data Type:</div>
+        <div class="userDataType">%datatype%</div>
+        
+        <div class="editButton button">Edit</div>
+        <div class="deleteButton button">Delete</div>
+    </div>
+</template>
+
+<template id="awaitingConfirmation-template">
+    <div class="awaitingConfirmationItem ListItem">
+        <p class="ADVendorNameTitle">Vendor Name:</p>
+        <p class="ADVendorName">%vendor%</p>
+
+        <p class="awaitingDataTitle">Data:</p>
+        <p class="awaitingData">%data%</p>
+
+        <p class="ADPurposeTitle">Awaiting:</p>
+        <p class="ADPurpose">%purpose%</p>
+    </div>
+</template>
