@@ -13,27 +13,27 @@ This is a sample vendor client that interacts and sends data to the manager.
 ### Dependancies
 - Node.js
 ## Features
-###Data Manager ID
+### Data Manager ID
 An ID system that allows individual data managers to be identified and communicated with.
-###Vendor List
+### Vendor List
 A list that displays all information about all vendors that have access to the users data.
-###User Data List
+### User Data List
 A list of all data that is held by vendors with labels of which vendors have access to it.
-###Data Verification Tab
+### Data Verification Tab
 A Tab used to verify new data entering the manager so the user can verify if it is theirs .
-###Delete Data
+### Delete Data
 A button on the user data list that allows the user to delete a piece of data from all vendors.
-###Edit Data
+### Edit Data
 A button on the user data list that allows the user to edit a piece of data for all vendors who store it.
-###Delete Vendor
+### Delete Vendor
 A button on the vendor list that deletes all data a vendor holds.
-###Awaiting data Tab
+### Awaiting data Tab
 A tab that shows all data that is awaiting confirmation from a vendor that a decision has been fulfilled.
-###Vendor Counter
+### Vendor Counter
 A counter at the top of the vendor list that displays how many vendors have access to the users data.
-###Vendor Filter
+### Vendor Filter
 A filter that allows the user to refine the information they see on the vendor list.
-###User Data Filter
+### User Data Filter
 A filter that allows the user to refine the information they see on the user data list.
 
 
